@@ -39,6 +39,14 @@ class LinkedList {
     }
   }
 
+  void PushFront(T&& new_value) {
+    InsertNth(0, new_value);
+  }
+
+  void PushBack(T&& new_value) {
+    InsertNth(size(), new_value);
+  }
+
   T NthElement(size_t index) {
     assert(index >= 0);
     assert(index < size_);
@@ -48,18 +56,18 @@ class LinkedList {
 
   void InsertNth(size_t index, T value) {
     assert(index >= 0);
-    assert(index < size_);
+    assert(index <= size_);
 
-    Node* new_el = new Node(value);
+    Node* new_node = new Node(value);
 
     if (index == 0) {
-      new_el->next = head_;
-      head_ = new_el;
+      new_node->next = head_;
+      head_ = new_node;
     } else {
       Node* prev = NthPointer(index - 1, head_);
       Node* next = prev->next;
-      new_el->next = next;
-      prev->next = new_el;
+      new_node->next = next;
+      prev->next = new_node;
     }
     size_++;
   }
@@ -88,7 +96,7 @@ class LinkedList {
   }
 
   void ReverseDivideAndConquer() {
-    DivideConquer(head_, NthPointer(size_ - 1, head_), size_);
+    head_ = DivideConquer(head_, NthPointer(size_ - 1, head_), size_).first;
   }
 
   size_t size() {
@@ -105,7 +113,8 @@ class LinkedList {
     }
 
     std::pair<Node*,Node*> ans = ReverseRecursive_(starting->next);
-    starting->next = ans.first;
+    ans.first->next = starting;
+    starting->next = nullptr;
     return {starting, ans.second};
   }
 
@@ -120,10 +129,14 @@ class LinkedList {
       return {ending, starting};
     }
 
-    Node* mid = NthPointer(cur_size / 2, starting);
+    size_t mid_index = cur_size / 2;
+    size_t left_size = mid_index + 1;
+    size_t right_size = cur_size - left_size;
+
+    Node* mid = NthPointer(mid_index, starting);
     Node* next_mid = mid->next;
-    std::pair<Node*, Node*> rev_left = DivideConquer(starting, mid, (cur_size + 1) / 2);
-    std::pair<Node*, Node*> rev_right = DivideConquer(next_mid, ending, cur_size / 2);
+    std::pair<Node*, Node*> rev_left = DivideConquer(starting, mid, left_size);
+    std::pair<Node*, Node*> rev_right = DivideConquer(next_mid, ending, right_size);
     rev_right.second->next = rev_left.first;
     return {rev_right.first, rev_left.second};
   }
@@ -132,7 +145,7 @@ class LinkedList {
     assert(index >= 0);
     assert(index < size_);
 
-    Node* cur_node;
+    Node* cur_node = start;
     size_t cur = 0;
     while (cur < index) {
       ++cur;
